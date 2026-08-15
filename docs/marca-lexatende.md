@@ -59,6 +59,8 @@ Três decisões que parecem arbitrárias mas não são:
 |---|---|
 | `public/branding.css` | **Todo o tema.** Paleta, modo claro e escuro, correções estruturais |
 | `index.html` | `<title>`, `lang="pt-BR"`, `<link>` para o branding.css |
+| `src/pages/Auth/Auth.tsx` | Tela de entrada 60/40, **sem recuperação de senha** |
+| `src/pages/Auth/LoginShowcase.tsx` | Painel institucional da entrada (arte SVG gerada) |
 | `src/assets/EVO_CRM.svg` | Logotipo do modo **escuro** (versão branca) |
 | `src/assets/EVO_CRM_light.svg` | Logotipo do modo **claro** (versão marinho) |
 | `public/favicon.svg`, `public/logo.svg` | Símbolo e logotipo servidos estaticamente |
@@ -112,6 +114,78 @@ as variantes de opacidade (`/70`, `/50`) acompanharem sozinhas.
 tokens `sidebar-*`: usa `text-muted-foreground`, `hover:bg-accent`, `bg-primary`
 e `text-primary`. Sem redefinir esses dentro da navegação, os itens ficariam com
 cor de conteúdo claro sobre fundo marinho.
+
+**Tela de entrada em 60/40, com painel institucional próprio.** A tela original
+era um cartão centralizado com três abas — Entrar, Cadastrar, Recuperar. Agora
+são duas colunas (`lg:grid-cols-5`, 3 + 2 = exatamente 60/40): à esquerda, o
+painel de marca; à direita, o formulário.
+
+**A tela ignora o tema do usuário: é sempre clara.** Marinho à esquerda, Névoa à
+direita, mesmo com o produto em modo escuro. Quem faz isso é a classe
+`.lex-login-light`, em `globals.css`, aplicada no container da tela.
+
+Duas armadilhas que essa classe precisou contornar, e que voltarão a morder quem
+mexer nela:
+
+- **Redefinir a variável não muda o texto herdado.** O `<body>` já resolveu
+  `color` com o valor do tema escuro; `<h1>`, `<label>` e `<input>`, que não
+  declaram cor própria, herdam esse valor **já computado**, não a variável. Sem
+  a linha `color: var(--foreground)` no container, título e rótulos saem brancos
+  sobre fundo claro — invisíveis. Este defeito existiu e foi corrigido; não o
+  reintroduza removendo a linha por parecer redundante.
+- **A variante `dark:` não é resolvida por variável.** Ela depende do ancestral
+  `.dark` no `<html>`, fora do alcance do container. Só um caso sobra visível: o
+  `dark:bg-input/30` do campo do design system, neutralizado por uma regra
+  explícita para `[data-slot='input']`.
+
+A lista do seletor de idioma abre em portal, no `<body>` — fora do container.
+Por isso o `SelectContent` recebe a mesma classe.
+
+Três consequências que não se percebem lendo só o `Auth.tsx`:
+
+1. **A recuperação de senha saiu da tela, não do sistema.** O formulário e a
+   chamada a `forgotPassword()` foram removidos do componente, mas o serviço
+   (`services/auth/authService.ts`) e a rota `/auth/reset-password` continuam
+   de pé — links já enviados por e-mail seguem funcionando. Reativar exige
+   reconstruir a UI, não o back-end.
+2. **O painel é marinho nos dois temas**, pelo mesmo motivo do Header: o
+   logotipo servido ali é a versão branca. Só o lado do formulário acompanha
+   claro/escuro.
+3. **A arte é SVG gerado, não fotografia** — ~2 KB, nítida em qualquer
+   densidade, sem licença de imagem, e usa os hexadecimais exatos da paleta. O
+   ponto de troca por foto está comentado dentro de `<Backdrop />`; a camada
+   `url(#lex-fade)` deve ser mantida, porque é ela que garante o contraste do
+   texto sobre a imagem.
+
+A marca d'água do painel reaproveita as coordenadas originais das duas barras
+de `LexAtende-Logo/svg/lexatende-simbolo-branco.svg` — o símbolo é desenhado em
+torno de (65, −65), por isso a constante `WATERMARK_SCALE` aparece também no
+`translate`. Mudar a escala sem recalcular o translate desloca a marca.
+
+**Não há seletor de idioma na entrada, e a interface está fixa em pt-BR.** As
+duas coisas andam juntas: o `defaultLocale` do projeto original é `en`, então,
+sem o seletor, qualquer máquina com navegador fora do português abriria o
+sistema em inglês **sem nenhum caminho na interface para voltar**. Por isso
+`detectLanguage()` em `src/i18n/config.ts` passou a devolver `'pt-BR'` fixo; a
+detecção original ficou preservada e exportada como `detectBrowserLanguage()`,
+para quando o produto voltar a ser multilíngue.
+
+Atenção ao escopo: os fluxos de **Setup**, **Onboarding** e **Configurações da
+Conta** ainda trocam de idioma por conta própria e não foram tocados — o
+primeiro é assistente de instalação e o último persiste o locale na API.
+
+**O aviso do reCAPTCHA foi retirado da tela, a pedido.** A proteção continua
+ativa — `executeRecaptcha()` segue sendo chamado antes de cada envio; o que saiu
+foi só o texto. Fica registrado que os termos do Google pedem que esse aviso
+apareça quando o selo está oculto: é uma pendência de conformidade a decidir,
+não um efeito colateral despercebido.
+
+Os textos do painel vivem em `auth.showcase.*` nos **seis** idiomas, e são
+propositalmente curtos: título e três rótulos, sem descritivos. Texto a mais ali
+compete com o formulário. As chaves mortas da tela antiga (`auth.tabs`,
+`auth.login.forgotPasswordLink`, o bloco `auth.forgotPassword` e os dois
+`protectedByRecaptcha`) foram removidas — `i18n-parity.spec.ts` exige que pt-BR
+espelhe EN, então acrescentar ou remover chave aqui é sempre nos seis arquivos.
 
 **Botões com verde neon.** Quatro botões (MCP Servers, Macros, Convite em Massa)
 trazem `bg-[#00ffa7]` e `text-black` fixos na classe. São reapontados por CSS em
