@@ -162,17 +162,16 @@ de `LexAtende-Logo/svg/lexatende-simbolo-branco.svg` — o símbolo é desenhado
 torno de (65, −65), por isso a constante `WATERMARK_SCALE` aparece também no
 `translate`. Mudar a escala sem recalcular o translate desloca a marca.
 
-**Não há seletor de idioma na entrada, e a interface está fixa em pt-BR.** As
-duas coisas andam juntas: o `defaultLocale` do projeto original é `en`, então,
-sem o seletor, qualquer máquina com navegador fora do português abriria o
-sistema em inglês **sem nenhum caminho na interface para voltar**. Por isso
-`detectLanguage()` em `src/i18n/config.ts` passou a devolver `'pt-BR'` fixo; a
-detecção original ficou preservada e exportada como `detectBrowserLanguage()`,
-para quando o produto voltar a ser multilíngue.
+**O seletor de idioma sai da entrada, e só dela.** Setup, Onboarding e
+Configurações da Conta continuam trocando de idioma normalmente, e
+`src/i18n/config.ts` **não foi tocado** — a detecção por navegador e a memória
+em `localStorage` seguem intactas.
 
-Atenção ao escopo: os fluxos de **Setup**, **Onboarding** e **Configurações da
-Conta** ainda trocam de idioma por conta própria e não foram tocados — o
-primeiro é assistente de instalação e o último persiste o locale na API.
+Houve uma tentativa de fixar a interface em pt-BR aqui, revertida: o
+`defaultLocale` do projeto é `en`, e fixar o idioma na inicialização faria a
+escolha feita nas Configurações da Conta se perder a cada recarga. Quem quiser
+que uma máquina com navegador em inglês abra em português deve mudar o
+`defaultLocale`, não curto-circuitar a detecção.
 
 **O aviso do reCAPTCHA foi retirado da tela, a pedido.** A proteção continua
 ativa — `executeRecaptcha()` segue sendo chamado antes de cada envio; o que saiu
