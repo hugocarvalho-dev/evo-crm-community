@@ -63,8 +63,8 @@ Três decisões que parecem arbitrárias mas não são:
 | `src/assets/EVO_CRM_light.svg` | Logotipo do modo **claro** (versão marinho) |
 | `public/favicon.svg`, `public/logo.svg` | Símbolo e logotipo servidos estaticamente |
 | `src/components/AppLogo.tsx` | Texto alternativo |
-| `src/components/layout/components/Header.tsx` | Logo maior + `forceTheme="dark"` |
-| `src/components/layout/components/Sidebar.tsx` | Rodapé institucional oculto |
+| `src/components/layout/components/Header.tsx` | Largura da navegação, logo maior, `forceTheme="dark"` |
+| `src/components/layout/components/Sidebar.tsx` | Largura da navegação, rodapé institucional oculto |
 | `src/i18n/locales/*/` | Textos de marca, cor padrão de etiqueta |
 | ~20 componentes | Cores que estavam fixas no código |
 
@@ -82,6 +82,19 @@ Três decisões que parecem arbitrárias mas não são:
 **`forceTheme="dark"` no Header.** O cabeçalho usa `bg-sidebar`, e a navegação é
 marinho nos dois temas. Sem isso, em modo claro o componente escolheria o
 logotipo marinho — marinho sobre marinho, invisível.
+
+**Largura da navegação: `w-72`, não o `w-56` original.** O valor de origem
+(224px) cortava "Agentes de IA" em duas linhas e apertava "Configurações".
+
+A largura aparece em **dois lugares que precisam casar** — `Sidebar.tsx:187` e
+`Header.tsx:236`. Alterar só um desalinha o logotipo em relação ao menu. Se um
+merge trouxer conflito em um deles, confira o outro.
+
+Contas, para quem for ajustar: `w-72` são 288px; menos o respiro lateral
+(`px-4`), sobram 256px. O logotipo a `h-12` ocupa 190px e o botão de recolher,
+32px — total de 222px, com 34px de folga. A proporção do logotipo é 3,97:1, e o
+`max-w` precisa acompanhar a altura (`h-12` → `max-w-52`), senão a imagem é
+achatada — distorção que o manual da marca proíbe.
 
 **Tokens `sidebar-*` redefinidos como conteúdo.** 109 componentes usam
 `bg-sidebar`, `text-sidebar-foreground` e `border-sidebar-border` em conteúdo
