@@ -1,0 +1,23 @@
+nome,token,hex,r,g,b,c,m,y,k,contraste_sobre_branco
+"Marinho Institucional",navy950,#04101E,4,16,30,87,47,0,88,19.13
+"Marinho 900",navy900,#081B30,8,27,48,83,44,0,81,17.36
+"Marinho 800",navy800,#0D2845,13,40,69,81,42,0,73,14.93
+"Marinho 700",navy700,#153A60,21,58,96,78,40,0,62,11.63
+"Marinho 600",navy600,#225081,34,80,129,74,38,0,49,8.29
+"Azul Acao",navy500,#326EAE,50,110,174,71,37,0,32,5.28
+"Marinho 400",navy400,#6092C7,96,146,199,52,27,0,22,3.26
+"Marinho 300",navy300,#9AB7D6,154,183,214,28,14,0,16,2.08
+"Marinho 200",navy200,#C9D8E8,201,216,232,13,7,0,9,1.45
+"Marinho 100",navy100,#E6EDF5,230,237,245,6,3,0,4,1.18
+"Nevoa",navy050,#F5F8FB,245,248,251,2,1,0,2,1.07
+"Turquesa Sinal",teal,#12A594,18,165,148,89,0,10,35,3.07
+"Turquesa Texto",tealDark,#0B7A6E,11,122,110,91,0,10,52,5.22
+"Turquesa Claro",tealLight,#3ECFBC,62,207,188,70,0,9,19,1.93
+"Ambar Institucional",amber,#D4A03C,212,160,60,0,25,72,17,2.36
+"Grafite",graphite,#1C242E,28,36,46,39,22,0,82,15.66
+"Cinza",gray,#5A6875,90,104,117,23,11,0,54,5.72
+"Cinza Claro",grayLight,#C9D0D8,201,208,216,7,4,0,15,1.56
+"Branco",white,#FFFFFF,255,255,255,0,0,0,0,1.00
+"Sucesso",success,#1E9E6A,30,158,106,81,0,33,38,3.41
+"Atencao",warning,#C98A0E,201,138,14,0,31,93,21,2.95
+"Critico",danger,#C0392F,192,57,47,0,70,76,25,5.43

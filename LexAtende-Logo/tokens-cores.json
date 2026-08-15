@@ -1,0 +1,332 @@
+{
+  "navy950": {
+    "nome": "Marinho Institucional",
+    "hex": "#04101E",
+    "rgb": [
+      4,
+      16,
+      30
+    ],
+    "cmyk": [
+      87,
+      47,
+      0,
+      88
+    ]
+  },
+  "navy900": {
+    "nome": "Marinho 900",
+    "hex": "#081B30",
+    "rgb": [
+      8,
+      27,
+      48
+    ],
+    "cmyk": [
+      83,
+      44,
+      0,
+      81
+    ]
+  },
+  "navy800": {
+    "nome": "Marinho 800",
+    "hex": "#0D2845",
+    "rgb": [
+      13,
+      40,
+      69
+    ],
+    "cmyk": [
+      81,
+      42,
+      0,
+      73
+    ]
+  },
+  "navy700": {
+    "nome": "Marinho 700",
+    "hex": "#153A60",
+    "rgb": [
+      21,
+      58,
+      96
+    ],
+    "cmyk": [
+      78,
+      40,
+      0,
+      62
+    ]
+  },
+  "navy600": {
+    "nome": "Marinho 600",
+    "hex": "#225081",
+    "rgb": [
+      34,
+      80,
+      129
+    ],
+    "cmyk": [
+      74,
+      38,
+      0,
+      49
+    ]
+  },
+  "navy500": {
+    "nome": "Azul Acao",
+    "hex": "#326EAE",
+    "rgb": [
+      50,
+      110,
+      174
+    ],
+    "cmyk": [
+      71,
+      37,
+      0,
+      32
+    ]
+  },
+  "navy400": {
+    "nome": "Marinho 400",
+    "hex": "#6092C7",
+    "rgb": [
+      96,
+      146,
+      199
+    ],
+    "cmyk": [
+      52,
+      27,
+      0,
+      22
+    ]
+  },
+  "navy300": {
+    "nome": "Marinho 300",
+    "hex": "#9AB7D6",
+    "rgb": [
+      154,
+      183,
+      214
+    ],
+    "cmyk": [
+      28,
+      14,
+      0,
+      16
+    ]
+  },
+  "navy200": {
+    "nome": "Marinho 200",
+    "hex": "#C9D8E8",
+    "rgb": [
+      201,
+      216,
+      232
+    ],
+    "cmyk": [
+      13,
+      7,
+      0,
+      9
+    ]
+  },
+  "navy100": {
+    "nome": "Marinho 100",
+    "hex": "#E6EDF5",
+    "rgb": [
+      230,
+      237,
+      245
+    ],
+    "cmyk": [
+      6,
+      3,
+      0,
+      4
+    ]
+  },
+  "navy050": {
+    "nome": "Nevoa",
+    "hex": "#F5F8FB",
+    "rgb": [
+      245,
+      248,
+      251
+    ],
+    "cmyk": [
+      2,
+      1,
+      0,
+      2
+    ]
+  },
+  "teal": {
+    "nome": "Turquesa Sinal",
+    "hex": "#12A594",
+    "rgb": [
+      18,
+      165,
+      148
+    ],
+    "cmyk": [
+      89,
+      0,
+      10,
+      35
+    ]
+  },
+  "tealDark": {
+    "nome": "Turquesa Texto",
+    "hex": "#0B7A6E",
+    "rgb": [
+      11,
+      122,
+      110
+    ],
+    "cmyk": [
+      91,
+      0,
+      10,
+      52
+    ]
+  },
+  "tealLight": {
+    "nome": "Turquesa Claro",
+    "hex": "#3ECFBC",
+    "rgb": [
+      62,
+      207,
+      188
+    ],
+    "cmyk": [
+      70,
+      0,
+      9,
+      19
+    ]
+  },
+  "amber": {
+    "nome": "Ambar Institucional",
+    "hex": "#D4A03C",
+    "rgb": [
+      212,
+      160,
+      60
+    ],
+    "cmyk": [
+      0,
+      25,
+      72,
+      17
+    ]
+  },
+  "graphite": {
+    "nome": "Grafite",
+    "hex": "#1C242E",
+    "rgb": [
+      28,
+      36,
+      46
+    ],
+    "cmyk": [
+      39,
+      22,
+      0,
+      82
+    ]
+  },
+  "gray": {
+    "nome": "Cinza",
+    "hex": "#5A6875",
+    "rgb": [
+      90,
+      104,
+      117
+    ],
+    "cmyk": [
+      23,
+      11,
+      0,
+      54
+    ]
+  },
+  "grayLight": {
+    "nome": "Cinza Claro",
+    "hex": "#C9D0D8",
+    "rgb": [
+      201,
+      208,
+      216
+    ],
+    "cmyk": [
+      7,
+      4,
+      0,
+      15
+    ]
+  },
+  "white": {
+    "nome": "Branco",
+    "hex": "#FFFFFF",
+    "rgb": [
+      255,
+      255,
+      255
+    ],
+    "cmyk": [
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "success": {
+    "nome": "Sucesso",
+    "hex": "#1E9E6A",
+    "rgb": [
+      30,
+      158,
+      106
+    ],
+    "cmyk": [
+      81,
+      0,
+      33,
+      38
+    ]
+  },
+  "warning": {
+    "nome": "Atencao",
+    "hex": "#C98A0E",
+    "rgb": [
+      201,
+      138,
+      14
+    ],
+    "cmyk": [
+      0,
+      31,
+      93,
+      21
+    ]
+  },
+  "danger": {
+    "nome": "Critico",
+    "hex": "#C0392F",
+    "rgb": [
+      192,
+      57,
+      47
+    ],
+    "cmyk": [
+      0,
+      70,
+      76,
+      25
+    ]
+  }
+}

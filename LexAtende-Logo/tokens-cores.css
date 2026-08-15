@@ -1,0 +1,27 @@
+:root {
+  /* LexAtende - tokens de cor */
+  --lex-navy950: #04101E; /* Marinho Institucional */
+  --lex-navy900: #081B30; /* Marinho 900 */
+  --lex-navy800: #0D2845; /* Marinho 800 */
+  --lex-navy700: #153A60; /* Marinho 700 */
+  --lex-navy600: #225081; /* Marinho 600 */
+  --lex-navy500: #326EAE; /* Azul Acao */
+  --lex-navy400: #6092C7; /* Marinho 400 */
+  --lex-navy300: #9AB7D6; /* Marinho 300 */
+  --lex-navy200: #C9D8E8; /* Marinho 200 */
+  --lex-navy100: #E6EDF5; /* Marinho 100 */
+  --lex-navy050: #F5F8FB; /* Nevoa */
+  --lex-teal: #12A594; /* Turquesa Sinal */
+  --lex-tealdark: #0B7A6E; /* Turquesa Texto */
+  --lex-teallight: #3ECFBC; /* Turquesa Claro */
+  --lex-amber: #D4A03C; /* Ambar Institucional */
+  --lex-graphite: #1C242E; /* Grafite */
+  --lex-gray: #5A6875; /* Cinza */
+  --lex-graylight: #C9D0D8; /* Cinza Claro */
+  --lex-white: #FFFFFF; /* Branco */
+  --lex-success: #1E9E6A; /* Sucesso */
+  --lex-warning: #C98A0E; /* Atencao */
+  --lex-danger: #C0392F; /* Critico */
+  --lex-primary: #04101E;
+  --lex-accent: #12A594;
+}
