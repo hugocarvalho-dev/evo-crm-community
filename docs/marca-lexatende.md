@@ -195,6 +195,29 @@ mínima; apagar o bloco exigiria casar dezenas de linhas de JSX. A linha de
 copyright foi alterada nos 6 idiomas, então a titularidade não é exibida nem
 fica embarcada no pacote.
 
+**Produtos foi retirado do produto.** Um escritório de advocacia não mantém
+catálogo. A remoção é em três pontos, e vale saber por que são três: o item da
+barra lateral em `menuItems.ts`, as rotas `/products` e `/products/import` em
+`routes/index.tsx`, e a aba **Produtos dentro do editor de Agentes de IA**
+(`AgentEditSidebar.tsx`) — esta última não é protegida por permissão, então
+qualquer solução via RBAC a deixaria visível e vazia.
+
+Duas escolhas conscientes aqui:
+
+- **Código, não permissão.** Revogar `products` pela tela de Papéis funcionaria
+  para o menu e as rotas sem tocar em código, mas é *dado*: não acompanha o
+  repositório, precisa ser refeito em cada instalação e um papel novo pode vir
+  com a permissão ligada.
+- **A aba do agente foi desligada com `show: false`, não apagada.** É diferença
+  de uma linha, que o merge reconcilia sozinho; apagar o bloco criaria conflito
+  sempre que o upstream mexesse na lista. `activeMenu` nasce em `'profile'` e só
+  muda por clique nessa lista, então desligar ali torna a aba inalcançável.
+
+As páginas, componentes e serviços de Produtos **continuam no repositório**,
+inertes e sem rota — reduz a diferença com o upstream e permite voltar atrás. O
+teste `menuItems.lexatende.spec.ts` (arquivo novo, nunca conflita) falha se uma
+atualização reintroduzir o item.
+
 ## Ressalvas
 
 **`installation_config.yml` é apenas semente.** Na primeira carga os valores vão
