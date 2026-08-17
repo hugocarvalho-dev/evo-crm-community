@@ -180,11 +180,53 @@ apareça quando o selo está oculto: é uma pendência de conformidade a decidir
 não um efeito colateral despercebido.
 
 Os textos do painel vivem em `auth.showcase.*` nos **seis** idiomas, e são
-propositalmente curtos: título e três rótulos, sem descritivos. Texto a mais ali
-compete com o formulário. As chaves mortas da tela antiga (`auth.tabs`,
+propositalmente curtos: título e três rótulos de uma palavra (Clientes,
+Atendimento, Gestão), sem descritivos. Texto a mais ali compete com
+o formulário. As chaves mortas da tela antiga (`auth.tabs`,
 `auth.login.forgotPasswordLink`, o bloco `auth.forgotPassword` e os dois
 `protectedByRecaptcha`) foram removidas — `i18n-parity.spec.ts` exige que pt-BR
 espelhe EN, então acrescentar ou remover chave aqui é sempre nos seis arquivos.
+
+**Os rótulos são uma linha de três, não lista vertical.** Palavras curtas em
+coluna única deixariam metade da largura vazia. Cada cartão traz ícone e um
+filete turquesa que cresce no `hover` — o peso visual vem daí, e não de linhas
+descritivas. Trocar a ordem do array `FEATURES` em `LoginShowcase.tsx` muda a
+leitura da linha: ela vai de quem é atendido à operação em volta.
+
+Duas restrições que o `grid-cols-3` impõe, e que não se percebem lendo o JSX:
+
+- **O container precisa de `max-w-3xl`**, não do `max-w-lg` original. Com 512px
+  cada cartão fica com ~150px e "Atendimento" quebra em duas linhas — o
+  `whitespace-nowrap` do rótulo transforma essa quebra em texto cortado, porque
+  o cartão tem `overflow-hidden`.
+- **Um quarto item quebra a linha.** Rótulo longo, idem. Acrescentar pilar aqui
+  é decidir também a largura.
+
+**O título tem recuo próprio (`lg:pl-10 xl:pl-16`), os cartões não.** O
+desencontro entre as duas margens é deliberado: é ele que separa título de
+rótulos sem precisar de mais espaço vertical. Alinhar os dois desfaz o efeito.
+
+**A linha de copyright saiu da tela de entrada**, nos dois lugares em que
+aparecia — o rodapé do painel e a linha equivalente do celular, em `Auth.tsx`. A
+chave `auth.showcase.copyright` foi removida dos seis arquivos; a do rodapé da
+barra lateral (`layout.json`) é outra, e continua de pé.
+
+**Logotipo do painel a `h-24`/`xl:h-28`.** O `max-w` acompanha a altura pela
+proporção de 3,97:1 — a `h-28` (112px) o logotipo ocupa ~444px, e o
+`max-w-[30rem]` (480px) fica acima disso de propósito: é teto de segurança, não
+recorte. Baixar o `max-w` sem baixar o `h` achata a imagem.
+
+**O logotipo carrega 39 unidades de vazio à esquerda, dentro do `viewBox`.** O
+arquivo é `-30 -103 614.72 155` e o primeiro traço desenhado (a haste do "L")
+está em `x=9`. Com o mesmo `padding` do título, o logotipo aparecia recuado — o
+vazio é 25,2% da altura renderizada, ~24px a `h-24`. A correção é a margem
+negativa que acompanha cada degrau de altura (`-ml-6` para `h-24`, `-ml-7` para
+`h-28`), em `LoginShowcase.tsx`. **Alterar a altura do logotipo exige recalcular
+a margem**, senão o desalinhamento volta. A conta é `altura × 0,252`.
+
+O mesmo vazio existe na faixa de marca do celular (`Auth.tsx`), onde o logotipo
+está a `h-12` sem compensação — ali ele não disputa alinhamento com título
+algum, então ficou como estava.
 
 **Botões com verde neon.** Quatro botões (MCP Servers, Macros, Convite em Massa)
 trazem `bg-[#00ffa7]` e `text-black` fixos na classe. São reapontados por CSS em

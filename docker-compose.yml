@@ -134,6 +134,12 @@ services:
       EVO_AI_CORE_SERVICE_URL: http://evo-core:5555
       BOT_RUNTIME_URL: http://evo-bot-runtime:8080
       BOT_RUNTIME_SECRET: ${BOT_RUNTIME_SECRET:-evo-bot-runtime-dev-secret}
+      # Provedor de WhatsApp por QR code. Com estas duas, a tela de novo canal
+      # já reconhece o Evolution Go e o atendente não digita URL nem token.
+      # GlobalConfigService lê o banco primeiro e a variável depois; as linhas
+      # EVOLUTION_GO_* existem no banco com valor nulo, então estas valem.
+      EVOLUTION_GO_API_URL: ${EVOLUTION_GO_API_URL:-http://evolution-go:3300}
+      EVOLUTION_GO_ADMIN_SECRET: ${EVOLUTION_GO_ADMIN_SECRET:-evolution-go-dev-secret}
       BOT_RUNTIME_POSTBACK_BASE_URL: http://evo-crm:3000
     volumes:
       - ./evo-ai-crm-community:/app:delegated
@@ -177,6 +183,12 @@ services:
       EVO_AI_CORE_SERVICE_URL: http://evo-core:5555
       BOT_RUNTIME_URL: http://evo-bot-runtime:8080
       BOT_RUNTIME_SECRET: ${BOT_RUNTIME_SECRET:-evo-bot-runtime-dev-secret}
+      # Provedor de WhatsApp por QR code. Com estas duas, a tela de novo canal
+      # já reconhece o Evolution Go e o atendente não digita URL nem token.
+      # GlobalConfigService lê o banco primeiro e a variável depois; as linhas
+      # EVOLUTION_GO_* existem no banco com valor nulo, então estas valem.
+      EVOLUTION_GO_API_URL: ${EVOLUTION_GO_API_URL:-http://evolution-go:3300}
+      EVOLUTION_GO_ADMIN_SECRET: ${EVOLUTION_GO_ADMIN_SECRET:-evolution-go-dev-secret}
       BOT_RUNTIME_POSTBACK_BASE_URL: http://evo-crm:3000
       # EVO-1999: sidekiq must not prepare the database (the web covers it via db:prepare).
       RUN_MIGRATIONS: "false"
@@ -394,6 +406,70 @@ services:
         condition: service_healthy
 
   # ---------------------------------------------------------------------------
+  # Evolution Go — provedor de WhatsApp por QR code (whatsmeow) — Port 3300
+  # ---------------------------------------------------------------------------
+  # Construído do submódulo, e não da imagem `intrategica/evg:1` que o exemplo
+  # oficial (evolution-go/docker/stack-evocrm.yml) usa: aquela é imagem de
+  # terceiro, sem relação com o código que está neste repositório.
+  #
+  # ATENÇÃO aos nomes das variáveis. O `.env.example` do projeto e o exemplo
+  # oficial trazem LOGTYPE, WADEBUG e WEBHOOKFILES, que o código NÃO lê — as
+  # constantes em pkg/config/env/env.go apontam para LOG_TYPE, DEBUG_ENABLED e
+  # WEBHOOK_FILES. Usar os nomes do exemplo falha em silêncio.
+  evolution-go:
+    build:
+      context: ./evolution-go
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3300:3300"
+    environment:
+      SERVER_PORT: "3300"
+      # Os dois bancos são criados pelo próprio serviço no boot
+      # (pkg/config/config.go), então uma máquina nova sobe sem passo manual.
+      POSTGRES_AUTH_DB: postgresql://${POSTGRES_USERNAME:-postgres}:${POSTGRES_PASSWORD:-evoai_dev_password}@postgres:5432/evogo_auth?sslmode=disable
+      POSTGRES_USERS_DB: postgresql://${POSTGRES_USERNAME:-postgres}:${POSTGRES_PASSWORD:-evoai_dev_password}@postgres:5432/evogo_users?sslmode=disable
+      GLOBAL_API_KEY: ${EVOLUTION_GO_ADMIN_SECRET:-evolution-go-dev-secret}
+      CLIENT_NAME: lexatende
+      OS_NAME: LexAtende
+      # WEBHOOK_URL foi REMOVIDO de propósito — não reintroduza sem ler isto.
+      #
+      # O produtor de webhooks entrega para DOIS destinos, não um
+      # (pkg/events/webhook/webhook_producer.go:43-48): o `WEBHOOK_URL` global
+      # E o webhook gravado na instância. Não há escolha entre eles; os dois
+      # disparam. Com ambos apontando para a mesma rota do CRM, cada mensagem
+      # recebida virava DUAS conversas idênticas na tela.
+      #
+      # O caminho de volta é registrado por instância, pelo próprio CRM, a cada
+      # `POST /instance/connect` (`connect_instance`, em evolution_go_concern.rb,
+      # envia `webhookUrl`) — o endereço vem de EVOLUTION_GO_WEBHOOK_URL no .env
+      # e precisa ser da rede do Docker, não o IP público do host.
+      #
+      # O comentário anterior aqui afirmava que esta linha era indispensável
+      # porque o CRM "nunca avisa o Evolution Go para onde entregar", atribuindo
+      # isso a `subscribe_to_webhooks` não estar implementado. A premissa está
+      # errada: quem registra é o connect, não o subscribe. Verificável na coluna
+      # `webhook` da tabela `instances`, em evogo_users.
+      WEBHOOK_FILES: "true"
+      CONNECT_ON_STARTUP: "true"
+      DATABASE_SAVE_MESSAGES: "false"
+      LOG_TYPE: console
+      DEBUG_ENABLED: "false"
+      MINIO_ENABLED: "false"
+    volumes:
+      - evolution_go_data:/app/dbdata
+      - evolution_go_logs:/app/logs
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'wget', '--no-verbose', '--tries=1', '--spider', 'http://127.0.0.1:3300/server/ok']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
   # Frontend (React / Vite / Nginx) — Port 5173
   # ---------------------------------------------------------------------------
   evo-frontend:
@@ -432,3 +508,7 @@ volumes:
   crm_cache:
   processor_logs:
   clickhouse_data:
+  # Sessão do WhatsApp (pareamento do QR) e logs do Evolution Go. Apagar o
+  # volume de dados desconecta o número e exige ler o QR de novo.
+  evolution_go_data:
+  evolution_go_logs:
