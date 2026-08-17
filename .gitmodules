@@ -20,8 +20,8 @@
 	url = https://github.com/evolution-foundation/evolution-api.git
 [submodule "evolution-go"]
 	path = evolution-go
-	url = https://github.com/evolution-foundation/evolution-go.git
-	branch = develop
+	url = git@github.com:hugocarvalho-dev/evolution-go.git
+	branch = lexatende
 [submodule "evo-bot-runtime"]
 	path = evo-bot-runtime
 	url = https://github.com/evolution-foundation/evo-bot-runtime.git
