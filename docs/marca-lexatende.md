@@ -202,31 +202,66 @@ Duas restrições que o `grid-cols-3` impõe, e que não se percebem lendo o JSX
 - **Um quarto item quebra a linha.** Rótulo longo, idem. Acrescentar pilar aqui
   é decidir também a largura.
 
-**O título tem recuo próprio (`lg:pl-10 xl:pl-16`), os cartões não.** O
-desencontro entre as duas margens é deliberado: é ele que separa título de
-rótulos sem precisar de mais espaço vertical. Alinhar os dois desfaz o efeito.
+**Título e cartões partem da mesma margem.** Houve aqui um recuo só do título
+(`lg:pl-10 xl:pl-16`), para deslocá-lo do respiro do painel; foi retirado a
+pedido, e o alinhamento único é o comportamento atual. O logotipo acompanha essa
+mesma margem — veja a compensação de `--logo-h` adiante.
 
 **A linha de copyright saiu da tela de entrada**, nos dois lugares em que
 aparecia — o rodapé do painel e a linha equivalente do celular, em `Auth.tsx`. A
 chave `auth.showcase.copyright` foi removida dos seis arquivos; a do rodapé da
 barra lateral (`layout.json`) é outra, e continua de pé.
 
-**Logotipo do painel a `h-24`/`xl:h-28`.** O `max-w` acompanha a altura pela
-proporção de 3,97:1 — a `h-28` (112px) o logotipo ocupa ~444px, e o
-`max-w-[30rem]` (480px) fica acima disso de propósito: é teto de segurança, não
-recorte. Baixar o `max-w` sem baixar o `h` achata a imagem.
+**Tamanhos do painel são fluidos (`clamp`), não degraus de breakpoint.** Logotipo,
+título, rótulos, respiro do painel e o interior dos cartões acompanham a largura
+da janela continuamente. A versão anterior usava valores fixos por faixa, e a
+faixa 1024–1279px não tinha ajuste nenhum: uma tela de 1024px recebia o tamanho
+pensado para quase 1280 e o painel lia como ampliado.
+
+Os pisos e tetos foram medidos em navegador, não estimados:
+
+| Elemento | `clamp` | 1024px | 1600px |
+| --- | --- | --- | --- |
+| Logotipo (altura) | `3.25rem, 6.6vw, 7rem` | 68px | 106px |
+| Título | `1.5rem, 2.85vw, 2.75rem` | 29px | 44px |
+| Rótulo do cartão | `0.9375rem, 1.2vw, 1.25rem` | 15px | 20px |
+
+**O fator do título (2,85vw) está preso à quebra em duas linhas.** A primeira
+linha do pt-BR tem 32 caracteres e, a 1024px, o painel oferece ~540px: acima de
+~33px de corpo ela não cabe e a frase cai para três linhas, desfazendo o `\n` da
+tradução. Aumentar o fator exige refazer essa conta.
 
 **O logotipo carrega 39 unidades de vazio à esquerda, dentro do `viewBox`.** O
 arquivo é `-30 -103 614.72 155` e o primeiro traço desenhado (a haste do "L")
 está em `x=9`. Com o mesmo `padding` do título, o logotipo aparecia recuado — o
-vazio é 25,2% da altura renderizada, ~24px a `h-24`. A correção é a margem
-negativa que acompanha cada degrau de altura (`-ml-6` para `h-24`, `-ml-7` para
-`h-28`), em `LoginShowcase.tsx`. **Alterar a altura do logotipo exige recalcular
-a margem**, senão o desalinhamento volta. A conta é `altura × 0,252`.
+vazio é 25,2% da altura renderizada. Como a altura agora é fluida, a compensação
+não pode ser uma classe por degrau: a altura vive na variável `--logo-h` e a
+margem é `calc(var(--logo-h) * -0.252)`. **Alterar a altura sem manter esse
+`calc` desalinha de novo.**
 
-O mesmo vazio existe na faixa de marca do celular (`Auth.tsx`), onde o logotipo
-está a `h-12` sem compensação — ali ele não disputa alinhamento com título
-algum, então ficou como estava.
+**A largura do logotipo é calculada, nunca `w-auto`.** Num contêiner flex a caixa
+de um `<img>` se estica até a largura disponível, e o SVG — que preserva a
+proporção — se centraliza dentro dessa caixa larga: o logotipo aparece no meio do
+painel, desalinhado do título, e margem alguma corrige, porque o errado é a
+caixa. Por isso `w-[calc(var(--logo-h)*3.966)]`, com a proporção exata do arquivo
+(614,72/155). Medido: com `max-w-full`, a 1024px a caixa ia a 534px para uma arte
+de 318px.
+
+**A faixa de marca do celular não existe mais.** Eram 160px no topo com um
+recorte da arte (`view="band"`, removido junto): naquela altura a roseta saía com
+traços de 0,36px e desaparecia. Agora o marinho com a arte ocupa a tela inteira
+do celular, o logotipo fica sobre ela e o formulário vem abaixo, **dentro de um
+cartão claro**.
+
+O cartão claro é decisão técnica, não estética: `.lex-login-light` fixa a tela no
+modo claro, inclusive `color-scheme: light`, que governa o preenchimento
+automático do navegador. Um formulário direto sobre o marinho sairia com texto
+escuro sobre fundo escuro, e o autofill pintaria o próprio fundo claro nos campos
+— retângulos brancos no meio do cartão. Trocar isso por um cartão escuro exige
+reescrever cores de campo, foco, erro e tratar o autofill à mão.
+
+A linha `auth.showcase.tagline` saiu do celular com a faixa e **ficou sem uso em
+todo o código**, embora siga nos seis catálogos.
 
 **Botões com verde neon.** Quatro botões (MCP Servers, Macros, Convite em Massa)
 trazem `bg-[#00ffa7]` e `text-black` fixos na classe. São reapontados por CSS em
