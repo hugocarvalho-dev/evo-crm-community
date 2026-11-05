@@ -38,6 +38,15 @@ lexatende-api.useconts.com.br {
 	@bloqueado path /api/v1/super_admin* /platform/* /sidekiq* /monitoring*
 	respond @bloqueado 404
 
+	# Evo Flow (Campanhas e Segmentos), chamado direto pelo navegador em
+	# VITE_EVOFLOW_API_URL=<BACKEND_URL>/evoflow. A documentação Swagger fica fechada.
+	# (Dentro do handle_path o prefixo /evoflow já foi removido.)
+	handle_path /evoflow/* {
+		@evoflow_docs path /api /api/ /api-json /api-yaml /api/swagger*
+		respond @evoflow_docs 404
+		reverse_proxy 127.0.0.1:3334
+	}
+
 	reverse_proxy 127.0.0.1:3030
 }
 

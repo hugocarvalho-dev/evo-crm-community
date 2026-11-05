@@ -47,6 +47,11 @@ MFA_ISSUER=LexAtende
 # ---------------------------------------------------------------- Evolution Go
 EVOLUTION_GO_ADMIN_SECRET=$(hex 32)
 
+# ---------------------------------------------------------------- Evo Flow (Campanhas)
+AUTH_APIKEY_INTEGRATION_LOCAL=$(hex 32)
+CLICKHOUSE_PASSWORD=$(hex 24)
+RABBITMQ_PASSWORD=$(hex 24)
+
 # ---------------------------------------------------------------- Comportamento
 RAILS_MAX_THREADS=5
 WEB_CONCURRENCY=0
