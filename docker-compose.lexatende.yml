@@ -1,0 +1,253 @@
+# =============================================================================
+# LexAtende: stack enxuta de produção (servidor com 4 GB de RAM)
+# =============================================================================
+# Serviços: Postgres, Redis, Evo Auth (+ Sidekiq), Evo CRM (+ Sidekiq),
+# Evolution Go, gateway oficial e frontend. Sem Core, Processor, Bot Runtime,
+# Evo Flow, Nexus, ClickHouse e RabbitMQ.
+#
+# Endereços públicos (atrás do Caddy + Cloudflare):
+#   https://lexatende.useconts.com.br      -> evo-frontend (127.0.0.1:5173)
+#   https://lexatende-api.useconts.com.br  -> evo-gateway  (127.0.0.1:3030)
+#
+# Regras de exposição (o Docker ignora o UFW ao publicar portas):
+#   - Postgres, Redis, Auth, CRM e Evolution Go NÃO publicam portas.
+#   - Gateway e frontend publicam só em 127.0.0.1, para o Caddy (network_mode: host).
+#
+# Uso no servidor (/opt/lexatende/app):
+#   docker compose -f docker-compose.lexatende.yml --env-file .env pull
+#   docker compose -f docker-compose.lexatende.yml --env-file .env up -d
+# O .env é gerado no servidor por lexatende/gerar-env.sh e nunca vai ao Git.
+# =============================================================================
+
+name: lexatende
+
+x-rails-common: &rails-common
+  restart: unless-stopped
+  env_file: .env
+  logging:
+    driver: json-file
+    options: { max-size: "10m", max-file: "3" }
+
+x-crm-env: &crm-env
+  RAILS_ENV: production
+  RAILS_LOG_TO_STDOUT: "true"
+  RAILS_SERVE_STATIC_FILES: "true"
+  REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/0
+  EVO_AUTH_SERVICE_URL: http://evo-auth:3001
+  # Módulos removidos: endereços vazios e Evo Flow desligado.
+  EVO_FLOW_ENABLED: "false"
+  AUTH_APIKEY_INTEGRATION_LOCAL: ""
+  EVO_AI_CORE_SERVICE_URL: ""
+  BOT_RUNTIME_URL: ""
+  EVOLUTION_GO_API_URL: http://evolution-go:3300
+  EVOLUTION_GO_WEBHOOK_URL: http://evo-crm:3000/webhooks/whatsapp/evolution_go
+  # Ruby consome bem menos memória com poucas arenas do malloc.
+  MALLOC_ARENA_MAX: "2"
+
+x-auth-env: &auth-env
+  RAILS_ENV: production
+  RAILS_LOG_TO_STDOUT: "true"
+  REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379/1
+  MALLOC_ARENA_MAX: "2"
+
+services:
+  # ---------------------------------------------------------------------------
+  # Infraestrutura (somente rede interna)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DATABASE}
+      POSTGRES_USER: ${POSTGRES_USERNAME}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    command:
+      - postgres
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - max_connections=60
+      - -c
+      - work_mem=4MB
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USERNAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    mem_limit: 512m
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["sh", "-c", "redis-server --requirepass \"$$REDIS_PASSWORD\" --appendonly yes --maxmemory 96mb --maxmemory-policy noeviction"]
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a \"$$REDIS_PASSWORD\" --no-auth-warning ping | grep -q PONG"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    mem_limit: 160m
+
+  # ---------------------------------------------------------------------------
+  # Evo Auth (imagem oficial)
+  # ---------------------------------------------------------------------------
+  evo-auth:
+    <<: *rails-common
+    image: ${EVO_AUTH_IMAGE:-evoapicloud/evo-auth-service-community:latest}
+    environment:
+      <<: *auth-env
+    volumes:
+      - auth_storage:/app/storage
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:3001/health || wget -qO- http://127.0.0.1:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+    mem_limit: 512m
+
+  evo-auth-sidekiq:
+    <<: *rails-common
+    image: ${EVO_AUTH_IMAGE:-evoapicloud/evo-auth-service-community:latest}
+    command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+    environment:
+      <<: *auth-env
+      RUN_MIGRATIONS: "false"
+      SIDEKIQ_CONCURRENCY: "3"
+    volumes:
+      - auth_storage:/app/storage
+    depends_on:
+      evo-auth: { condition: service_healthy }
+    healthcheck:
+      disable: true
+    mem_limit: 384m
+
+  # ---------------------------------------------------------------------------
+  # Evo CRM (imagem LexAtende do GHCR)
+  # ---------------------------------------------------------------------------
+  evo-crm:
+    <<: *rails-common
+    image: ${EVO_CRM_IMAGE:-ghcr.io/hugocarvalho-dev/evo-ai-crm-community:lexatende}
+    environment:
+      <<: *crm-env
+    volumes:
+      - crm_storage:/app/storage
+    depends_on:
+      evo-auth: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3000/health/live >/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 180s
+    mem_limit: 768m
+
+  evo-crm-sidekiq:
+    <<: *rails-common
+    image: ${EVO_CRM_IMAGE:-ghcr.io/hugocarvalho-dev/evo-ai-crm-community:lexatende}
+    command: ["bundle", "exec", "sidekiq", "-C", "config/sidekiq.yml"]
+    environment:
+      <<: *crm-env
+      RUN_MIGRATIONS: "false"
+      SIDEKIQ_CONCURRENCY: "5"
+    volumes:
+      - crm_storage:/app/storage
+    depends_on:
+      evo-crm: { condition: service_healthy }
+    healthcheck:
+      disable: true
+    mem_limit: 640m
+
+  # ---------------------------------------------------------------------------
+  # Evolution Go (imagem oficial) — somente rede interna
+  # ---------------------------------------------------------------------------
+  evolution-go:
+    image: ${EVOLUTION_GO_IMAGE:-evoapicloud/evolution-go:latest}
+    restart: unless-stopped
+    environment:
+      SERVER_PORT: "3300"
+      POSTGRES_AUTH_DB: postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432/evogo_auth?sslmode=disable
+      POSTGRES_USERS_DB: postgresql://${POSTGRES_USERNAME}:${POSTGRES_PASSWORD}@postgres:5432/evogo_users?sslmode=disable
+      GLOBAL_API_KEY: ${EVOLUTION_GO_ADMIN_SECRET}
+      CLIENT_NAME: lexatende
+      OS_NAME: LexAtende
+      # Sem WEBHOOK_URL global: o CRM registra o webhook por instância ao conectar
+      # (ver comentário no docker-compose.yml). Com os dois, cada mensagem duplica.
+      WEBHOOK_FILES: "true"
+      CONNECT_ON_STARTUP: "true"
+      DATABASE_SAVE_MESSAGES: "false"
+      LOG_TYPE: console
+      DEBUG_ENABLED: "false"
+      MINIO_ENABLED: "false"
+    volumes:
+      - evolution_go_data:/app/dbdata
+      - evolution_go_logs:/app/logs
+    depends_on:
+      postgres: { condition: service_healthy }
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3300/server/ok"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging:
+      driver: json-file
+      options: { max-size: "10m", max-file: "3" }
+    mem_limit: 384m
+
+  # ---------------------------------------------------------------------------
+  # Gateway oficial (roteia Auth x CRM) — 127.0.0.1:3030 para o Caddy
+  # ---------------------------------------------------------------------------
+  evo-gateway:
+    image: ${EVO_GATEWAY_IMAGE:-evoapicloud/evo-crm-gateway:latest}
+    restart: unless-stopped
+    environment:
+      AUTH_UPSTREAM: evo-auth:3001
+      CRM_UPSTREAM: evo-crm:3000
+      # Serviços removidos: o nginx só resolve o nome se alguma rota for usada,
+      # e essas rotas não são chamadas na versão enxuta.
+      CORE_UPSTREAM: evo-core-removido:5555
+      PROCESSOR_UPSTREAM: evo-processor-removido:8000
+      BOT_RUNTIME_UPSTREAM: evo-bot-runtime-removido:8080
+    ports:
+      - "127.0.0.1:3030:3030"
+    depends_on:
+      evo-crm: { condition: service_healthy }
+    mem_limit: 64m
+
+  # ---------------------------------------------------------------------------
+  # Frontend (imagem LexAtende do GHCR) — 127.0.0.1:5173 para o Caddy
+  # ---------------------------------------------------------------------------
+  evo-frontend:
+    image: ${EVO_FRONTEND_IMAGE:-ghcr.io/hugocarvalho-dev/evo-ai-frontend-community:lexatende}
+    restart: unless-stopped
+    environment:
+      VITE_APP_ENV: production
+      VITE_API_URL: ${BACKEND_URL}
+      VITE_AUTH_API_URL: ${BACKEND_URL}
+      VITE_WS_URL: ${BACKEND_URL}
+    ports:
+      - "127.0.0.1:5173:80"
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:80/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    mem_limit: 64m
+
+volumes:
+  postgres_data:
+  redis_data:
+  auth_storage:
+  crm_storage:
+  evolution_go_data:
+  evolution_go_logs:
