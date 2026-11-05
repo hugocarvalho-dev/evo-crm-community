@@ -253,7 +253,7 @@ services:
   # Evo Flow: Campanhas e Segmentos (Jornadas ficam ocultas no frontend)
   # ---------------------------------------------------------------------------
   clickhouse:
-    image: ${CLICKHOUSE_IMAGE:-clickhouse/clickhouse-server:24.8}
+    image: ${CLICKHOUSE_IMAGE:-clickhouse/clickhouse-server:25.8}
     restart: unless-stopped
     environment:
       CLICKHOUSE_USER: default
@@ -295,7 +295,7 @@ services:
     logging:
       driver: json-file
       options: { max-size: "10m", max-file: "3" }
-    mem_limit: 256m
+    mem_limit: 320m
 
   evo-flow:
     image: ${EVO_FLOW_IMAGE:-evoapicloud/evo-flow-community:1.0.0}
