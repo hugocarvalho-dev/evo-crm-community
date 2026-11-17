@@ -57,8 +57,8 @@ Três decisões que parecem arbitrárias mas não são:
 
 | Arquivo | O que faz |
 |---|---|
-| `public/branding.css` | **Todo o tema.** Paleta, modo claro e escuro, correções estruturais |
-| `index.html` | `<title>`, `lang="pt-BR"`, `<link>` para o branding.css |
+| `src/styles/globals.css` | **Todo o tema.** Paleta, modo claro e escuro, correções estruturais, fonte Sora e `--radius`. Importado depois do design system (ver `main.tsx`) |
+| `index.html` | `<title>`, `lang="pt-BR"` |
 | `src/pages/Auth/Auth.tsx` | Tela de entrada 60/40, **sem recuperação de senha** |
 | `src/pages/Auth/LoginShowcase.tsx` | Painel institucional da entrada (arte SVG gerada) |
 | `src/assets/EVO_CRM.svg` | Logotipo do modo **escuro** (versão branca) |
@@ -104,7 +104,7 @@ comum — títulos, campos de busca, cartões. São 1.414 ocorrências. No tema
 original isso não aparecia, porque barra lateral e fundo eram ambos escuros; com
 fundo claro, gerava título invisível e busca escura no meio da página.
 
-A correção está em `branding.css`: os tokens `sidebar-*` valem **conteúdo** por
+A correção está em `src/styles/globals.css`: os tokens `sidebar-*` valem **conteúdo** por
 padrão, e o marinho é reaplicado só nos containers de navegação
 (`.bg-sidebar.border-r`, `.bg-sidebar.border-b`, `.\!bg-sidebar`), com
 `:not(main *)` excluindo o conteúdo. Corrigir por variável, e não por classe, faz
@@ -264,8 +264,8 @@ A linha `auth.showcase.tagline` saiu do celular com a faixa e **ficou sem uso em
 todo o código**, embora siga nos seis catálogos.
 
 **Botões com verde neon.** Quatro botões (MCP Servers, Macros, Convite em Massa)
-trazem `bg-[#00ffa7]` e `text-black` fixos na classe. São reapontados por CSS em
-`branding.css`, não editados na origem.
+traziam `bg-[#00ffa7]` e `text-black` fixos na classe. Desde o commit `31b3de2f`
+usam os tokens do tema diretamente no componente.
 
 **Rodapé da barra lateral oculto, não removido.** Trocar uma classe é uma âncora
 mínima; apagar o bloco exigiria casar dezenas de linhas de JSX. A linha de
@@ -275,9 +275,16 @@ fica embarcada no pacote.
 **Produtos foi retirado do produto.** Um escritório de advocacia não mantém
 catálogo. A remoção é em três pontos, e vale saber por que são três: o item da
 barra lateral em `menuItems.ts`, as rotas `/products` e `/products/import` em
-`routes/index.tsx`, e a aba **Produtos dentro do editor de Agentes de IA**
-(`AgentEditSidebar.tsx`) — esta última não é protegida por permissão, então
-qualquer solução via RBAC a deixaria visível e vazia.
+`routes/index.tsx`, e a aba **Produtos dentro do editor de Agentes de IA** — esta última não é
+protegida por permissão, então qualquer solução via RBAC a deixaria visível e
+vazia.
+
+No merge de 17/11/2026 o upstream apagou `AgentEditSidebar.tsx` (o rail lateral
+virou abas horizontais, definidas em `components/agentTabs.ts`). A ocultação
+não foi reaplicada lá porque `/agents/*` inteiro já está bloqueado em
+`src/config/lexatende.ts` (`LEXATENDE_BLOCKED_PATHS`). **Se Agentes de IA voltar
+a ser exposto, a aba Produtos reaparece** — filtrar `'products'` do retorno de
+`getVisibleAgentTabs` nesse momento.
 
 Duas escolhas conscientes aqui:
 
@@ -304,8 +311,8 @@ logo e URL se alteram no painel (Super Admin → Settings).
 **Cores padrão não repintam o que existe.** Etiquetas, tags e widgets já gravados
 mantêm a cor do banco. A troca vale para os próximos.
 
-**Alterar `branding.css` exige rebuild** do frontend, porque o arquivo vem da
-imagem.
+**Alterar o tema exige rebuild** do frontend: `src/styles/globals.css` é
+empacotado no build, não servido à parte.
 
 ## Conformidade
 
